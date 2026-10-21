@@ -36,6 +36,11 @@ h2 {
   font-weight: 700;
 }
 
+h3 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
 .header {
   display: flex;
   gap: 1em;
