@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, maximum-scale=1.0" />
+
+    <title>Celine's HCDE 439 Physical Computing Page!</title>
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <h1>Celine's Assignment 3!</h1>
+    <div class="header">
+      <img src="images/a3/operation.gif" />
+      <p>
+This GIF shows when the circuit is running, the thermistor changes resistance as the temperature changes. 
+This changes the voltage at A0, which the Arduino reads with 'analogRead()''. The sensor value is then 
+mapped to an LED brightness value from 0 to 255. When the reading is below 280, the blue LED turns on. 
+When the reading reaches 280 or higher, the red LED turns on. The Serial Monitor also shows the thermistor 
+reading and the LED brightness so I can see how the circuit responds.
+      </p>
+    </div>
+    <div class="code-section">
+      <h1>Here's the code snippet:</h1>
+      <pre><code>
+// This is the pin where I am reading the thermistor voltage.
+const int thermistorPin = A0;
+
+// These are the PWM pins connected to my two LEDs.
+const int blueLED = 9;
+const int redLED = 10;
+
+// This runs once when the Arduino starts.
+void setup() {
+
+  // Set the blue LED pin as an output.
+  pinMode(blueLED, OUTPUT);
+
+  // Set the red LED pin as an output.
+  pinMode(redLED, OUTPUT);
+
+  // Start the Serial Monitor so I can see the sensor values.
+  Serial.begin(9600);
+}
+
+// This keeps running while the Arduino is on.
+void loop() {
+
+  // Read the voltage from the thermistor voltage divider.
+  int sensorValue = analogRead(thermistorPin);
+
+  // sensorValue range: 0 - 1023
+  // LEDbrightness range: 0 - 255
+
+  int brightness = map(sensorValue, 270, 300, 0, 255);
+  brightness = constrain(brightness, 0, 255);
+
+  // Keep the brightness value between 0 and 255.
+  brightness = constrain(brightness, 0, 255);
+
+  // Print a label before the thermistor reading.
+  Serial.print("Thermistor reading: ");
+
+  // Print the actual analog value.
+  Serial.print(sensorValue);
+
+  // Print a label before the PWM value.
+  Serial.print(" | LED brightness: ");
+
+  // Print the PWM brightness value.
+  Serial.println(brightness);
+
+  // If the reading is below the middle of my measured range, turn on the blue LED.
+  if (sensorValue < 280) {
+
+    // Make the blue LED brighter when the reading gets farther from the midpoint.
+    analogWrite(blueLED, 255 - brightness);
+
+    // Turn the red LED off.
+    analogWrite(redLED, 0);
+  }
+
+  // If the sensor reading is 280 or higher, turn on the red LED.
+else {
+
+  // Turn the blue LED off.
+  analogWrite(blueLED, 0);
+
+  // Turn the red LED on using the mapped brightness.
+  analogWrite(redLED, brightness);
+}
+
+  // Wait a little before taking another reading.
+  delay(100);
+}
+      </code></pre>
+    </div>
+    <div class="header">
+      <p>
+        Physical setup of my thermistor circuit connected to an Arduino Uno. The thermistor is read through
+        A0, while the red and blue LEDs are controlled through PWM pins 9 and 10. In this image, the red 
+        LED is on because the sensor reading is in the higher range. the LEDs.
+      </p>
+      <img src="images/a3/circuit.jpg" />
+    </div>
+    <div class="header">
+      <img src="images/a3/Schematic.png" />
+      <p>This schematic shows how The thermistor is connected with a 10k Ω resistor to create a voltage 
+        divider, and A0 is connected at the midpoint to measure the voltage. As the temperature changes, 
+        the thermistor's resistance changes, which causes the voltage at A0 to change. The Arduino uses 
+        this reading to decide which LED should turn on. The blue LED is connected to PWM pin 9 and the 
+        red LED is connected to PWM pin 10. Each LED also uses a 220 Ω resistor to limit the current and 
+        protect the LED.
+      </p>
+    </div>
+    <div class="header">
+      <img src="images/a3/Calculation.png" />
+      <p>
+      This calculation shows the expected voltage at A0 when the thermistor and the fixed resistor are 
+      both around 10 kΩ. Using the voltage divider equation, the 5 V input is divided equally, which gives 
+      an output voltage of about 2.5 V at A0. The Arduino Uno then converts this voltage into a 10-bit ADC 
+      value from 0 to 1023. Since 2.5 V is half of 5 V, the expected analog reading is about 512. This 
+      gives me a theoretical midpoint to compare with the actual thermistor readings from my circuit.
+      </p>
+    </div>
+    <div class="header">
+      <img src="images/a3/Graph.jpg" />
+      <p>
+     This graph shows how the voltage measured at A0 changed over time as I warmed the thermistor. 
+     The x-axis represents time in seconds, and the y-axis represents the voltage at the midpoint of 
+     the voltage divider. As the thermistor warmed up, its resistance changed, causing the voltage at 
+     A0 to gradually increase from about 1.36 V to 1.55 V. These voltage values were calculated from the 
+     Arduino's analog readings using (V = (ADC/1023)\times 5V).
+      </p>
+    </div>
+    <div class="header">
+      <img src="images/a3/serial number.png" />
+      <p>
+     The Serial Monitor shows the thermistor reading and the LED brightness value calculated by the Arduino.
+     When the thermistor reading is below 280, the blue LED is on. When the reading reaches 280 or higher, 
+     the red LED turns on. As the thermistor reading increases, the mapped brightness value also increases,
+     until it reaches the maximum PWM value of 255.
+      </p>
+    </div>
+    <div class="header">
+      <h2>Additional Questions</h2>
+    </div>
+      <h3>In your voltage divider, can the variable resistor be either R1 or R2 or does it need to be one 
+        or the other? Justify your answer with example calculations.</h3>
+      <p>The thermistor can be used as either R1 or R2 in the voltage divider. The voltage at A0 is 
+        calculated using (V-out= 5 * R_2 / {R_1+R_2}). For example, if the fixed resistor is 
+        10 kΩ and the thermistor is 5 kΩ, placing the thermistor at R2 gives (5 * 5 / 15 = 1.67V).
+        If the thermistor is placed at R1 instead, the output becomes (5 * 10 / 15 = 3.33V). 
+        Both positions work, but switching the thermistor from R1 to R2 reverses how the output voltage 
+        changes as the thermistor resistance changes, so the code has to match the way the circuit is wired.
+      </p>
+      <h3>AnalogWrite and analogRead are respectively 8-bit and 10-bit values. Imagine you 
+        had 10-bit PWM and a 16-bit analog-to-digital converter instead. How would this change your
+         map() code? Explain your answer.</h3>
+      <p>
+If analogRead() used a 16-bit ADC, its range would change from 0-1023 to 0-65,535. If analogWrite() used 
+10-bit PWM, its range would change from 0 - 255 to 0 - 1023. Because of this, my map() code would change to 
+map(sensorValue, 0, 65535, 0, 1023). The purpose of map() would stay the same, but the input and output 
+ranges would be larger because the higher bit values provide more possible steps and more resolution.
+  </body>
+</html>
