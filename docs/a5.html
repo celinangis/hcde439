@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, maximum-scale=1.0" />
+
+    <title>Celine's HCDE 439 Physical Computing Page!</title>
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <h1>Celine's Assignment 5!</h1>
+    <div class="header">
+      <img src="images/a5/Operation.gif" />
+      <p>
+        This GIF shows that when I touch the metal spoon, the capacitive sensor detects the change and the
+        Arduino sends a signal to the MOSFET, turning on the 12 V LED strip. When I let go of the spoon, the
+        MOSFET turns off and the LED strip turns off.
+      </p>
+    </div>
+    <div class="code-section">
+      <h1>Here's the code snippet:</h1>
+      <pre><code>
+// Include the library for capacitive touch sensing.
+#include &lt;CapacitiveSensor.h&gt;
+
+// Set up the capacitive sensor using pins 2 and 4.
+CapacitiveSensor touchSensor = CapacitiveSensor(2, 4);
+
+// Set the LED strip pin to 9.
+const int stripPin = 9;
+
+// Set the touch threshold.
+long threshold = 2000;
+
+// Run this function once.
+void setup() {
+  // Start serial communication.
+  Serial.begin(9600);
+
+  // Set pin 9 to LOW before it becomes an output.
+  digitalWrite(stripPin, LOW);
+
+  // Set pin 9 as an output, which starts LOW so the LED strip stays off.
+  pinMode(stripPin, OUTPUT);
+
+  // Make sure the LED strip starts off.
+  analogWrite(stripPin, 0);
+}
+
+// Repeat this function continuously.
+void loop() {
+  // Read the capacitive touch sensor.
+  long sensorValue = touchSensor.capacitiveSensor(30);
+
+  // Print the sensor value.
+  Serial.println(sensorValue);
+
+  // Check whether the spoon is touched.
+  if (sensorValue &gt; threshold) {
+    // Turn the LED strip on at full brightness.
+    analogWrite(stripPin, 255);
+  }
+  // Run this when the spoon is not touched.
+  else {
+    // Turn the LED strip off.
+    analogWrite(stripPin, 0);
+  }
+
+  // Wait 50 milliseconds before reading again.
+  delay(50);
+}
+      </code></pre>
+    </div>
+    <div class="header">
+      <p>
+        In setup, I made sure the LED strip stays off when the Arduino first turns on. Before pinMode() runs,
+        pin 9 starts as an input, so it is not sending any signal to the MOSFET. I set pin 9 to LOW first, so
+        when pinMode() makes it an output, it starts at 0 V instead of sending a signal by accident. The 10 kΩ
+        pull-down resistor also keeps the gate at 0 V until I touch the spoon.
+      </p>
+    </div>
+    <div class="header">
+      <p>
+        This image shows my full circuit with the Arduino, a breadboard, the LED strip, and a metal spoon.
+        The spoon is connected with a green alligator clip and acts as the touch sensor, while the LED strip
+        is connected with alligator clips and powered by an external 12 V power supply through the DC jack
+        adapter.
+      </p>
+      <img src="images/a5/Photo Circuit.jpg" />
+    </div>
+    <div class="header">
+      <img src="images/a5/Photo Circuit Close.jpg" />
+      <p>
+        This close-up shows the IRLZ44N N-MOSFET and the resistors on the breadboard. The Arduino is powered
+        by USB, while the external power supply connects to the breadboard's power rails, so the LED strip's
+        power is kept separate from the Arduino's logic power.
+      </p>
+    </div>
+    <div class="header">
+      <img src="images/a5/Input&amp;Output.jpeg" style="align-self: flex-start;" />
+      <p>
+        This schematic shows both the input and output parts of my circuit. For the input, I used a capacitive
+        touch sensor with a metal spoon. I connected a 1 MΩ resistor between Arduino pins 2 and 4, with pin 2
+        acting as the send pin and pin 4 as the receive pin. The metal spoon is also connected to pin 4 and acts
+        as the touch-sensitive surface. When I touch the spoon, my body changes the capacitance, and the Arduino
+        detects this change using the CapacitiveSensor library. I chose a 1 MΩ resistor because it gives enough
+        sensitivity to detect direct touch without making the sensor overly sensitive.
+
+        For the output, I used an IRLZ44N N-MOSFET to control a 12 V LED strip. Pin 9 connects to the MOSFET's
+        gate through a 220 Ω resistor, which limits the current coming out of the Arduino pin. I also added a
+        10 kΩ pull-down resistor between the gate and ground, which keeps the gate at 0 V when pin 9 is not
+        sending a signal, so the LED strip does not turn on by accident. The positive side of the 12 V external
+        power supply connects to the positive side of the LED strip, and the negative side of the strip connects
+        to the MOSFET's drain. The MOSFET's source connects to ground, which is shared between the Arduino and
+        the external power supply. When pin 9 sends 5 V, the gate gets about 4.9 V, the MOSFET turns on, and
+        current flows from the drain to the source, turning the LED strip on. When pin 9 sends 0 V, the MOSFET
+        turns off and the LED strip turns off. This way, the Arduino only controls the MOSFET, while the LED
+        strip gets its power from the external 12 V supply.
+      </p>
+    </div>
+    <div style="margin-bottom: 40px;">
+      <h2>Resistor Calculations</h2>
+
+      <h3>220 Ω Gate Resistor</h3>
+      <p>
+        I used a 220 Ω resistor between pin 9 and the MOSFET's gate to limit the current coming out of the
+        Arduino pin. When pin 9 turns HIGH, the gate briefly draws current while it charges. Using Ohm's Law,
+        the most this current can be is 5 V / 220 Ω = about 22.7 mA. After the gate is charged, it draws
+        almost no current, so this only happens for a very short moment.
+      </p>
+
+      <h3>10 kΩ Pull-Down Resistor</h3>
+      <p>
+        I used a 10 kΩ pull-down resistor between the gate and ground to keep the MOSFET off when pin 9 is not
+        sending a signal. When pin 9 is HIGH, a small steady current flows through both resistors
+        (5 V / 10,220 Ω = about 0.5 mA). Because the two resistors split the voltage, the gate gets
+        (5 V * 10,000 Ω / 10,220 Ω = about 4.89 V) instead of the full 5 V, which is still enough to turn the
+        MOSFET on.
+      </p>
+
+      <h3>LED Strip and MOSFET Current</h3>
+      <p>
+        To find out how much current the LED strip uses, I measured it with a multimeter set to the 20 mA DC
+        current range, and it read about 16 mA (0.016 A) when the strip was on. I placed the multimeter in series
+        between the LED strip's negative wire and the MOSFET's drain, so all of the strip's current flowed
+        through the meter. This is far below the IRLZ44N's
+        47 A maximum, so the MOSFET uses almost no power and stays cool. The LED strip itself uses about
+        12 V * 0.016 A = 0.19 W.
+      </p>
+
+      <h3>Expected Voltages</h3>
+      <ul>
+        <li>Pin 9: 0 V when OFF, 5 V when ON</li>
+        <li>MOSFET gate when ON: about 4.9 V</li>
+        <li>MOSFET source: 0 V (connected to ground)</li>
+        <li>MOSFET drain when ON: close to 0 V</li>
+        <li>MOSFET drain when OFF: about 12 V, since no current flows through the LED strip</li>
+        <li>Across the LED strip when ON: about 12 V</li>
+      </ul>
+    </div>
+    <div class="header">
+      <h2>Additional Questions</h2>
+    </div>
+      <h3>These are the datasheets for the n-mosfet transistor: DMT6009LCT, IRLZ44N, P30N06LE. Read the
+        text on your mosfet to see which one you have. For your mosfet, what is the absolute maximum amount of
+        current between pins 2 and 3?</h3>
+      <p>
+        I used an IRLZ44N N-MOSFET. According to its datasheet, pin 2 is the drain and pin 3 is the source. The
+        absolute maximum continuous current between them is 47 A, which is measured at 25°C with 10 V on the
+        gate. This drops to 33 A at 100°C, and the MOSFET can handle up to 160 A for very short pulses. In my
+        circuit, the gate only gets about 4.9 V, so the MOSFET may not reach the full 47 A. My LED strip only
+        uses about 16 mA, so it is still far below this limit.
+      </p>
+      <h3>Draw a schematic for a circuit with using at least your arduino, a DC motor, a flyback diode, and
+        capacitors between power and ground. Find parts with datasheets you could use for each of these
+        schematic components.</h3>
+      <img src="images/a5/Q2 Schematic.jpeg" />
+      <p>
+        This schematic shows a circuit where pin 9 turns the MOSFET on and off, which turns the 3 V DC motor
+        on and off. The flyback
+        diode protects the MOSFET from the voltage spike the motor makes when it turns off, and the two
+        capacitors between power and ground smooth out the motor's power. The 220 Ω resistor limits the current
+        coming out of pin 9, and the 10 kΩ pull-down resistor keeps the motor off when pin 9 is not sending a
+        signal. The motor gets its power from a separate 3 V supply, which shares a common ground with the
+        Arduino.
+      </p>
+      <p>Parts and datasheets:</p>
+      <ul>
+        <li>N-MOSFET: <a href="https://www.infineon.com/assets/row/public/documents/24/49/infineon-irlz44npbf-datasheet-en.pdf">Infineon IRLZ44N</a></li>
+        <li>DC motor: <a href="https://www.pololu.com/file/0J11/fa_130ra.pdf">Mabuchi FA-130RA</a></li>
+        <li>Flyback diode: <a href="https://www.farnell.com/datasheets/3677049.pdf">onsemi 1N5401</a></li>
+        <li>100 µF capacitor: <a href="https://mediap.industry.panasonic.eu/assets/imported/industrial.panasonic.com/cdbs/www-data/pdf/RDF0000/ABA0000C1259.pdf">Panasonic EEU-FR1A101</a></li>
+        <li>0.1 µF capacitor: <a href="https://www.vishay.com/docs/45171/kseries.pdf">Vishay K104K15X7RF53H5</a></li>
+      </ul>
+      <h3>Draw a schematic using at least your arduino, the L293D chip, and two motors. Write (pseudo) code
+        that shows how you would move the motors both forward, both back, then one forward one back, and one
+        back then forward.</h3>
+      <img src="images/a5/Q3 Schematic.jpeg" />
+      <p>
+        This schematic shows how the L293D chip lets the Arduino control two DC motors and spin them both ways. The chip
+        gets 5 V from the Arduino to run, and the motors get their power from a separate 6 V supply. Each motor
+        has an enable pin that turns it on and off, and I connected these to PWM pins so I can control the speed
+        with analogWrite(). Each motor also has two input pins, and setting one HIGH and the other LOW makes the
+        motor spin one way, while switching them makes it spin the other way. All the grounds are connected
+        together, and the chip has built-in diodes that protect it from the motors' voltage spikes.
+      </p>
+      <pre><code>
+// Set up the pins for both motors.
+Motor A: enable pin = pin 9, input pins = pins 8 and 7
+Motor B: enable pin = pin 10, input pins = pins 12 and 11
+Set all six pins as OUTPUT
+
+// Spin a motor forward.
+Set its first input pin HIGH and its second input pin LOW
+
+// Spin a motor backward.
+Set its first input pin LOW and its second input pin HIGH
+
+// Repeat the steps below forever.
+// Turn on both motors at full speed.
+Turn on both enable pins with analogWrite 255
+
+// Move both motors forward.
+Spin Motor A forward and Motor B forward
+Wait 2 seconds
+
+// Move both motors backward.
+Spin Motor A backward and Motor B backward
+Wait 2 seconds
+
+// Move Motor A forward and Motor B backward.
+Spin Motor A forward and Motor B backward
+Wait 2 seconds
+
+// Move Motor A backward and Motor B forward.
+Spin Motor A backward and Motor B forward
+Wait 2 seconds
+    </code></pre>
+  </body>
+</html>
